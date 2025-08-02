@@ -4,7 +4,7 @@ import { Primitives as PP } from './primitives';
 import { Reference as PRF } from './reference';
 import { ReservedWords as PRW } from './reserved_words';
 
-export module Expression {
+export namespace Expression {
   /**
    * expr is the top-level parser in the grammar.
    */

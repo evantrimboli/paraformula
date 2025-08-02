@@ -3,7 +3,7 @@ import { Primitives as P, CharUtil as CU } from 'parsecco';
 import { Primitives as PP } from './primitives';
 import { Address as PA } from './address';
 
-export module Range {
+export namespace Range {
   /**
    * Parses an A1 range suffix.
    */

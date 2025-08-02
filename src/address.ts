@@ -3,7 +3,7 @@ import { Util } from './util';
 import { Primitives as P, CharUtil as CU } from 'parsecco';
 import { Primitives as PP } from './primitives';
 
-export module Address {
+export namespace Address {
   /**
    * Parses the `R` part of an absolute R1C1 address.
    * @param istream input CharStream.

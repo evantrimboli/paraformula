@@ -1,4 +1,4 @@
-export module AST {
+export namespace AST {
   export class Env {
     public static readonly type: 'Env' = 'Env';
     public readonly tag = Env.type;

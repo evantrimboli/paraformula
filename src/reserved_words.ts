@@ -1,7 +1,7 @@
 import { Primitives as P, CharUtil as CU } from 'parsecco';
 import { AST } from './ast';
 
-export module ReservedWords {
+export namespace ReservedWords {
   interface AritiesMap {
     [key: string]: Set<number>;
   }

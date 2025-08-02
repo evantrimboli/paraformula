@@ -1,4 +1,4 @@
-export module Util {
+export namespace Util {
   /**
    * Convert an Excel A1 column string into a number.
    * @param col A1 column string.
