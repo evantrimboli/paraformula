@@ -289,24 +289,32 @@ export namespace Expression {
     return arr2;
   }
 
-  /**
-   * Returns true if the character is alphanumeric (case insensitive).
-   * @param ch The character to check.
-   */
-  export function isAlphaNum(ch: string): boolean {
-    const result =
-      (ch.charCodeAt(0) >= 48 && ch.charCodeAt(0) <= 57) ||
-      (ch.charCodeAt(0) >= 65 && ch.charCodeAt(0) <= 90) ||
-      (ch.charCodeAt(0) >= 97 && ch.charCodeAt(0) <= 122);
-    return result;
+  const PERIOD = 46;
+  const UNDERSCORE = 95;
+  const DIGIT_0 = 49;
+  const DIGIT_9 = 57;
+  const UPPER_A = 65;
+  const UPPER_Z = 90;
+  const LOWER_A = 97;
+  const LOWER_Z = 122;
+
+  function isValidFunctionChar(ch: string): boolean {
+    const c = ch.charCodeAt(0);
+    return (
+      (c >= DIGIT_0 && c <= DIGIT_9) ||
+      (c >= UPPER_A && c <= UPPER_Z) ||
+      (c >= LOWER_A && c <= LOWER_Z) ||
+      c === PERIOD ||
+      c === UNDERSCORE
+    );
   }
 
   /**
    * Parses a valid function identifier.
    */
-  export const functionName = P.pipe2<CU.CharStream, CU.CharStream, CU.CharStream>(P.letter)(P.matchWhile(isAlphaNum))(
-    (ch, str) => ch.concat(str)
-  );
+  export const functionName = P.pipe2<CU.CharStream, CU.CharStream, CU.CharStream>(P.letter)(
+    P.matchWhile(isValidFunctionChar)
+  )((ch, str) => ch.concat(str));
 
   /**
    * Parses a function of arbitrary arity.
@@ -317,39 +325,34 @@ export namespace Expression {
       P.left<CU.CharStream, CU.CharStream>(functionName)(P.char('('))
     )(nameCS => {
       // what happens next depends on the arity associated with the name
-      const name = nameCS.toString();
-      switch (PRW.whichArity(name)) {
-        case 'fixed' /* fixed arity */: {
-          const fixedArities = PRW.arityFixed[name];
-          const next = P.left<AST.Expression[], CU.CharStream>(sepBy(expr(R))(PP.Comma))(P.char(')'));
-          return P.bind<AST.Expression[], AST.FunctionApplication>(next)(exprs => {
-            // is this an arity that we expect?
-            if (!fixedArities.has(exprs.length)) {
-              return P.zero<AST.FunctionApplication>('Arity ' + fixedArities + ' expected for function ' + name);
-            }
-            return P.result(new AST.FunctionApplication(name, exprs, new AST.FixedArity(exprs.length)));
-          });
-        }
-        case 'atleast': {
-          const atLeastArity = PRW.arityAtLeastN[name];
-          const next = P.left<AST.Expression[], CU.CharStream>(sepBy1(expr(R))(PP.Comma))(P.char(')'));
-          return P.bind<AST.Expression[], AST.FunctionApplication>(next)(exprs => {
-            // is this an arity that we expect?
-            if (!(exprs.length >= atLeastArity)) {
-              return P.zero<AST.FunctionApplication>('Arity ' + atLeastArity + ' expected for function ' + name);
-            }
-            return P.result(new AST.FunctionApplication(name, exprs, new AST.LowBoundArity(atLeastArity)));
-          });
-        }
-        case 'any': {
-          const next = P.left<AST.Expression[], CU.CharStream>(sepBy(expr(R))(PP.Comma))(P.char(')'));
-          return P.bind<AST.Expression[], AST.FunctionApplication>(next)(exprs => {
-            return P.result(new AST.FunctionApplication(name, exprs, AST.VarArgsArityInst));
-          });
-        }
-        case 'unknown':
-          return P.zero<AST.FunctionApplication>("Unrecognized function name '" + name + "'");
+      const name = nameCS.toString().toLocaleUpperCase();
+      const def = PRW.getFunctionDefinition(name);
+
+      // If it's not a pre-defined function, just parse it as varargs
+      if (!def) {
+        const next = P.left<AST.Expression[], CU.CharStream>(sepBy(expr(R))(PP.Comma))(P.char(')'));
+        return P.bind<AST.Expression[], AST.FunctionApplication>(next)(exprs =>
+          P.result(new AST.FunctionApplication(name, exprs, AST.VarArgsArityInst))
+        );
       }
+
+      const { minArity, maxArity } = def;
+
+      if (maxArity !== null) {
+        const next = P.left<AST.Expression[], CU.CharStream>(sepBy(expr(R))(PP.Comma))(P.char(')'));
+        return P.bind<AST.Expression[], AST.FunctionApplication>(next)(exprs =>
+          exprs.length < minArity || exprs.length > maxArity
+            ? P.zero<AST.FunctionApplication>(`Arity between ${minArity}, ${maxArity} expected for function ${name}`)
+            : P.result(new AST.FunctionApplication(name, exprs, new AST.FixedArity(exprs.length)))
+        );
+      }
+
+      const next = P.left<AST.Expression[], CU.CharStream>(sepBy1(expr(R))(PP.Comma))(P.char(')'));
+      return P.bind<AST.Expression[], AST.FunctionApplication>(next)(exprs =>
+        exprs.length < minArity
+          ? P.zero<AST.FunctionApplication>(`Arity ${minArity} expected for function ${name}`)
+          : P.result(new AST.FunctionApplication(name, exprs, new AST.LowBoundArity(minArity)))
+      );
     });
   }
 

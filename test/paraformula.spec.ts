@@ -911,20 +911,6 @@ describe('booleanLiteral', () => {
   });
 });
 
-describe('varArgsFunctionName', () => {
-  it('should succeed on SUM', function* () {
-    const input = new CU.CharStream('SUM');
-    const output = yield* PRW.varArgsFunctionName(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result.toString()).to.equal('SUM');
-        break;
-      case 'failure':
-        assert.fail();
-    }
-  });
-});
-
 describe('reservedWord', () => {
   it('should fail if it encounters a reserved word', function* () {
     const input = new CU.CharStream('SUM');
@@ -1078,11 +1064,11 @@ describe('fApply', () => {
     }
   });
 
-  it('should parse a varargs function application like SUM()', function* () {
-    const input = new CU.CharStream('SUM(A1,B2:B77,5)');
+  it('should unknown function applications as varargs', function* () {
+    const input = new CU.CharStream('FOO(A1,B2:B77,5)');
     const output = yield* PE.fApply(PR.rangeAny)(input);
     const expected = new AST.FunctionApplication(
-      'SUM',
+      'FOO',
       [
         new AST.ReferenceAddress(
           PP.EnvStub,
@@ -1101,6 +1087,45 @@ describe('fApply', () => {
       ],
       AST.VarArgsArityInst
     );
+    switch (output.tag) {
+      case 'success':
+        expect(output.result).to.eql(expected);
+        break;
+      case 'failure':
+        assert.fail();
+    }
+  });
+
+  it('should parse function names case insensitively', function* () {
+    const input = new CU.CharStream('sum(5)');
+    const output = yield* PE.fApply(PR.rangeAny)(input);
+    const expected = new AST.FunctionApplication('SUM', [new AST.Number(5)], new AST.LowBoundArity(1));
+    switch (output.tag) {
+      case 'success':
+        expect(output.result).to.eql(expected);
+        break;
+      case 'failure':
+        assert.fail();
+    }
+  });
+
+  it('should accept "namespaced" functions', function* () {
+    const input = new CU.CharStream('MYORG.CALC(5)');
+    const output = yield* PE.fApply(PR.rangeAny)(input);
+    const expected = new AST.FunctionApplication('MYORG.CALC', [new AST.Number(5)], AST.VarArgsArityInst);
+    switch (output.tag) {
+      case 'success':
+        expect(output.result).to.eql(expected);
+        break;
+      case 'failure':
+        assert.fail();
+    }
+  });
+
+  it('should accept an underscore in the name', function* () {
+    const input = new CU.CharStream('MYORG_CALC(5)');
+    const output = yield* PE.fApply(PR.rangeAny)(input);
+    const expected = new AST.FunctionApplication('MYORG_CALC', [new AST.Number(5)], AST.VarArgsArityInst);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -1396,7 +1421,7 @@ describe('parse', () => {
         ),
         new AST.Number(5),
       ],
-      AST.VarArgsArityInst
+      new AST.LowBoundArity(1)
     );
     expect(output).to.eql(expected);
   });
@@ -1444,7 +1469,7 @@ describe('yieldableParse', () => {
         ),
         new AST.Number(5),
       ],
-      AST.VarArgsArityInst
+      new AST.LowBoundArity(1)
     );
     expect(output).to.eql(expected);
   });
