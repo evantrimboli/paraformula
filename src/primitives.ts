@@ -1,5 +1,6 @@
 import { AST } from './ast';
-import { Primitives as P, CharUtil as CU } from 'parsecco';
+import type { CharUtil as CU } from 'parsecco';
+import { Primitives as P } from 'parsecco';
 
 export namespace Primitives {
   /**
