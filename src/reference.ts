@@ -4,7 +4,7 @@ import { Primitives as PP } from './primitives';
 import { Address as PA } from './address';
 import { ReservedWords as RW } from './reserved_words';
 
-export module Reference {
+export namespace Reference {
   /**
    * Parses a quoted worksheet name.
    */

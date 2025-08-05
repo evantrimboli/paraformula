@@ -1,7 +1,7 @@
 import { AST } from './ast';
 import { Primitives as P, CharUtil as CU } from 'parsecco';
 
-export module Primitives {
+export namespace Primitives {
   /**
    * TODO remove: this is a stub until parsecco supports parsing with user state.
    */
