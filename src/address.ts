@@ -54,8 +54,8 @@ export namespace Address {
    * Parses an address mode token.
    */
   export const addrMode = P.choice<AST.AddressMode>(
-    P.pipe<CU.CharStream, AST.AddressMode>(P.str('$'))(_cs => AST.AbsoluteAddress)
-  )(P.pipe<undefined, AST.AddressMode>(P.ok(undefined))(_cs => AST.RelativeAddress));
+    P.pipe<CU.CharStream, AST.AddressMode>(P.str('$'))(() => AST.AbsoluteAddress)
+  )(P.pipe<undefined, AST.AddressMode>(P.ok(undefined))(() => AST.RelativeAddress));
 
   /**
    * Parses the column component of an A1 address.
@@ -79,7 +79,7 @@ export namespace Address {
    */
   export const addr1Mode = P.pipe2<AST.AddressMode, number, [AST.AddressMode, number]>(addrMode)(addr1)((mode, col) => [
     mode,
-    col,
+    col
   ]);
 
   /**

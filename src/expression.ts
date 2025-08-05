@@ -1,4 +1,5 @@
-import { Primitives as P, CharUtil as CU } from 'parsecco';
+import type { CharUtil as CU } from 'parsecco';
+import { Primitives as P } from 'parsecco';
 import { AST } from './ast';
 import { Primitives as PP } from './primitives';
 import { Reference as PRF } from './reference';
@@ -16,7 +17,7 @@ export namespace Expression {
    * https://support.microsoft.com/en-us/office/calculation-operators-and-precedence-in-excel-48be406d-4975-4d31-b2b8-7af9e0e2878a
    */
   abstract class PrecedenceClass {
-    tag = 'precedenceclass';
+    readonly tag: string = 'precedenceclass';
     public readonly op: string;
     public readonly expr: AST.Expression;
     constructor(op: string, e: AST.Expression) {
@@ -29,7 +30,7 @@ export namespace Expression {
    * Level 2: exponentiation (^)
    */
   class PrecedenceLevel2 extends PrecedenceClass {
-    tag = 'precedencelevel2';
+    override tag = 'precedencelevel2';
     constructor(e: AST.Expression) {
       super('^', e);
     }
@@ -38,19 +39,19 @@ export namespace Expression {
    * Level 3: addition (+) and subtraction (-)
    */
   class PrecedenceLevel3 extends PrecedenceClass {
-    tag = 'precedencelevel3';
+    override tag = 'precedencelevel3';
   }
   /**
    * Level 4: multiplication (*) and division (/)
    */
   class PrecedenceLevel4 extends PrecedenceClass {
-    tag = 'precedencelevel4';
+    override tag = 'precedencelevel4';
   }
   /**
    * Level 5: concatenation (&)
    */
   class PrecedenceLevel5 extends PrecedenceClass {
-    tag = 'precedencelevel5';
+    override tag = 'precedencelevel5';
     constructor(e: AST.Expression) {
       super('&', e);
     }
@@ -61,13 +62,13 @@ export namespace Expression {
    * greater than or equal to (>=).
    */
   class PrecedenceLevel6 extends PrecedenceClass {
-    tag = 'precedencelevel6';
+    override tag = 'precedencelevel6';
   }
 
   function exponent(R: P.IParser<AST.Range>) {
     // exponent MUST consume something
     return P.pipe2<AST.Expression, CU.CharStream, PrecedenceLevel2>(level1(R))(PP.wsPad(P.char('^')))(
-      (e, _op) => new PrecedenceLevel2(e)
+      e => new PrecedenceLevel2(e)
     );
   }
 
@@ -253,7 +254,7 @@ export namespace Expression {
         (_sign, e) => new AST.UnaryOpExpr('-', e)
       ),
       P.pipe2<AST.Expression, CU.CharStream, AST.Expression>(exprSimple(R))(P.char('%'))(
-        (e, _op) => new AST.UnaryOpExpr('%', e)
+        e => new AST.UnaryOpExpr('%', e)
       )
     );
   }

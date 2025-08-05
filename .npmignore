@@ -3,4 +3,5 @@ examples
 .vscode
 .prettierrc
 tsconfig.json
+eslint.config.mts
 test

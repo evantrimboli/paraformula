@@ -1,4 +1,5 @@
-import { Primitives as P, CharUtil as CU } from 'parsecco';
+import type { CharUtil as CU } from 'parsecco';
+import { Primitives as P } from 'parsecco';
 import { AST } from './ast';
 
 export namespace ReservedWords {
@@ -11,7 +12,7 @@ export namespace ReservedWords {
   const createFnDef = (name: string, minArity: number, maxArity: number | null): FunctionDefinition => ({
     name,
     minArity,
-    maxArity,
+    maxArity
   });
 
   const createFixed = (name: string, arity: number): FunctionDefinition => createFnDef(name, arity, arity);
@@ -489,7 +490,7 @@ export namespace ReservedWords {
     createFnDef('YIELDDISC', 4, 5),
     createFnDef('YIELDMAT', 5, 6),
     createFnDef('Z.TEST', 2, 3),
-    createFnDef('ZTEST', 2, 3),
+    createFnDef('ZTEST', 2, 3)
   ];
 
   const normalizeFnName = (name: string): string => name.toLocaleUpperCase();
@@ -508,6 +509,6 @@ export namespace ReservedWords {
     // the poison pill generic type parameter
     // is purely so that this parser returns
     // a type that is a "reference".
-    P.pipe<CU.CharStream, AST.PoisonPill>(P.choices(functionNames))(_cs => new AST.PoisonPill())
+    P.pipe<CU.CharStream, AST.PoisonPill>(P.choices(functionNames))(() => new AST.PoisonPill())
   )('Cannot parse a reserved word.') as P.IParser<undefined>;
 }

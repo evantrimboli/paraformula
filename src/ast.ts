@@ -24,10 +24,10 @@ export namespace AST {
     type: 'RelativeAddress';
   }
   export const AbsoluteAddress: AbsoluteAddressMode = {
-    type: 'AbsoluteAddress',
+    type: 'AbsoluteAddress'
   };
   export const RelativeAddress: RelativeAddressMode = {
-    type: 'RelativeAddress',
+    type: 'RelativeAddress'
   };
   export type AddressMode = AbsoluteAddressMode | RelativeAddressMode;
 
@@ -238,7 +238,7 @@ export namespace AST {
       return 'ReferenceName(' + this.varName + ')';
     }
 
-    public toFormula(r1c1: boolean = false): string {
+    public toFormula(): string {
       return this.varName;
     }
   }
@@ -297,7 +297,7 @@ export namespace AST {
       return 'Number(' + this.value + ')';
     }
 
-    public toFormula(r1c1: boolean = false): string {
+    public toFormula(): string {
       return this.value.toString();
     }
   }
@@ -315,7 +315,7 @@ export namespace AST {
       return 'String(' + this.value + ')';
     }
 
-    public toFormula(r1c1: boolean = false): string {
+    public toFormula(): string {
       return '"' + this.value + '"';
     }
   }
@@ -333,7 +333,7 @@ export namespace AST {
       return 'Boolean(' + this.value + ')';
     }
 
-    public toFormula(r1c1: boolean = false): string {
+    public toFormula(): string {
       return this.value.toString().toUpperCase();
     }
   }
@@ -349,7 +349,7 @@ export namespace AST {
       throw new Error('This object should never appear in an AST.');
     }
 
-    public toFormula(r1c1: boolean = false): string {
+    public toFormula(): string {
       throw new Error('This object should never appear in an AST.');
     }
   }
