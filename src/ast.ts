@@ -25,6 +25,10 @@ export namespace AST {
     equals(e: Env): boolean {
       return this.path === e.path && this.workbookName === e.workbookName && this.worksheetName === e.worksheetName;
     }
+
+    isEmpty() {
+      return this.worksheetName === '' && this.workbookName === '' && this.path === '';
+    }
   }
 
   export interface AbsoluteAddressMode {
@@ -44,6 +48,9 @@ export namespace AST {
   };
 
   export type AddressMode = AbsoluteAddressMode | RelativeAddressMode;
+
+  const singleQuoteRe = /'/g;
+  const getA1Prefix = (mode: AddressMode): string => (mode.type === 'AbsoluteAddress' ? '$' : '');
 
   export class Address {
     static readonly type: 'Address' = 'Address';
@@ -105,20 +112,45 @@ export namespace AST {
       return new Address(this.row, this.column, this.rowMode, this.colMode, env);
     }
 
+    #toEnvPrefix(): string {
+      if (this.env.isEmpty()) {
+        return '';
+      }
+
+      const { worksheetName, workbookName, path } = this.env;
+      let prefix = '';
+      if (path) {
+        prefix += path;
+      }
+
+      if (workbookName) {
+        prefix += '[' + workbookName + ']';
+      }
+
+      if (worksheetName) {
+        prefix += worksheetName.replace(singleQuoteRe, `''`);
+      }
+
+      return `'${prefix}'!`;
+    }
+
     toA1Ref(): string {
-      return intToColChars(this.column) + this.row.toString();
+      return this.#toEnvPrefix() + this.toA1RefOnly();
     }
 
     toR1C1Ref(): string {
+      return this.#toEnvPrefix() + this.toR1C1RefOnly();
+    }
+
+    toA1RefOnly(): string {
+      const colPrefix = getA1Prefix(this.colMode);
+      const rowPrefix = getA1Prefix(this.rowMode);
+
+      return colPrefix + intToColChars(this.column) + rowPrefix + this.row.toString();
+    }
+
+    toR1C1RefOnly(): string {
       return 'R' + this.row + 'C' + this.column;
-    }
-
-    toFullyQualifiedR1C1Ref(): string {
-      return this.env.worksheetName + '!' + this.toR1C1Ref();
-    }
-
-    toFullyQualifiedA1Ref(): string {
-      return this.env.worksheetName + '!' + this.toA1Ref();
     }
   }
 

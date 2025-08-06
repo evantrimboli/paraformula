@@ -12,7 +12,7 @@ export namespace Reference {
     const normalChar = P.sat(ch => ch !== "'");
     const escapedChar = P.pipe<CU.CharStream, CU.CharStream>(P.str("''"))(() => new CU.CharStream("'"));
     const chars = P.choice(normalChar)(escapedChar);
-    const many1Chars = P.pipe<CU.CharStream[], CU.CharStream>(P.many1(chars))(cs => CU.CharStream.concat(cs));
+    const many1Chars = P.pipe<CU.CharStream[], CU.CharStream>(P.many1(chars))(CU.CharStream.concat);
     return P.between<CU.CharStream, CU.CharStream, CU.CharStream>(P.str("'"))(P.str("'"))(many1Chars);
   })();
 
