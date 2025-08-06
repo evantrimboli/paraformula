@@ -1,9 +1,30 @@
 import { AST } from './ast';
-import { Util } from './util';
 import { Primitives as P, CharUtil as CU } from 'parsecco';
 import { Primitives as PP } from './primitives';
 
 export namespace Address {
+  /**
+   * Convert an Excel A1 column string into a number.
+   * @param col A1 column string.
+   * @returns Number.
+   */
+  const columnToInt = (col: string): number => {
+    const cti = (idx: number): number => {
+      // get ASCII code and then subtract 64 to get Excel column #
+      const code = col.charCodeAt(idx) - 64;
+      // the value depends on the position; a column is a base-26 number
+      const num = Math.pow(26, col.length - idx - 1) * code;
+      if (idx === 0) {
+        // base case
+        return num;
+      } else {
+        // add this letter to number and recurse
+        return num + cti(idx - 1);
+      }
+    };
+    return cti(col.length - 1);
+  };
+
   /**
    * Parses the `R` part of an absolute R1C1 address.
    * @param istream input CharStream.
@@ -88,8 +109,7 @@ export namespace Address {
   export const addrA1 = P.pipe2<[AST.AddressMode, CU.CharStream], [AST.AddressMode, number], AST.Address>(addrAMode)(
     addr1Mode
   )(
-    ([colMode, col], [rowMode, row]) =>
-      new AST.Address(row, Util.columnToInt(col.toString()), rowMode, colMode, PP.EnvStub)
+    ([colMode, col], [rowMode, row]) => new AST.Address(row, columnToInt(col.toString()), rowMode, colMode, PP.EnvStub)
   );
 
   /**

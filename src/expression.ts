@@ -18,8 +18,8 @@ export namespace Expression {
    */
   abstract class PrecedenceClass {
     readonly tag: string = 'precedenceclass';
-    public readonly op: string;
-    public readonly expr: AST.Expression;
+    readonly op: string;
+    readonly expr: AST.Expression;
     constructor(op: string, e: AST.Expression) {
       this.op = op;
       this.expr = e;
