@@ -362,8 +362,8 @@ describe('rangeA1Contig', () => {
     const correct = new AST.Range([
       [
         new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(1, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-      ],
+        new AST.Address(1, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+      ]
     ]);
     switch (output.tag) {
       case 'success':
@@ -380,8 +380,8 @@ describe('rangeA1Contig', () => {
     const correct = new AST.Range([
       [
         new AST.Address(1, -1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(34, 11102, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub),
-      ],
+        new AST.Address(34, 11102, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub)
+      ]
     ]);
     switch (output.tag) {
       case 'success':
@@ -422,12 +422,12 @@ describe('rangeA1Discontig', () => {
     const correct = new AST.Range([
       [
         new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(10, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
+        new AST.Address(10, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
       ],
       [
         new AST.Address(1, 3, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(10, 4, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-      ],
+        new AST.Address(10, 4, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+      ]
     ]);
     switch (output.tag) {
       case 'success':
@@ -446,12 +446,12 @@ describe('rangeR1C1Discontig', () => {
     const correct = new AST.Range([
       [
         new AST.Address(1, 1, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub),
-        new AST.Address(10, 2, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub),
+        new AST.Address(10, 2, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub)
       ],
       [
         new AST.Address(1, 3, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub),
-        new AST.Address(10, 4, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub),
-      ],
+        new AST.Address(10, 4, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub)
+      ]
     ]);
     switch (output.tag) {
       case 'success':
@@ -470,12 +470,12 @@ describe('rangeAny', () => {
     const correct = new AST.Range([
       [
         new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(10, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
+        new AST.Address(10, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
       ],
       [
         new AST.Address(1, 3, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(10, 4, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-      ],
+        new AST.Address(10, 4, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+      ]
     ]);
     switch (output.tag) {
       case 'success':
@@ -492,8 +492,8 @@ describe('rangeAny', () => {
     const correct = new AST.Range([
       [
         new AST.Address(1, -1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(34, 11102, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub),
-      ],
+        new AST.Address(34, 11102, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub)
+      ]
     ]);
     switch (output.tag) {
       case 'success':
@@ -647,8 +647,8 @@ describe('rangeReference', () => {
       new AST.Range([
         [
           new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        ],
+          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+        ]
       ])
     );
     switch (output.tag) {
@@ -668,8 +668,8 @@ describe('rangeReference', () => {
       new AST.Range([
         [
           new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        ],
+          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+        ]
       ])
     );
     switch (output.tag) {
@@ -689,8 +689,8 @@ describe('rangeReference', () => {
       new AST.Range([
         [
           new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        ],
+          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+        ]
       ])
     );
     switch (output.tag) {
@@ -711,8 +711,8 @@ describe('rangeReference', () => {
       new AST.Range([
         [
           new AST.Address(1, 1, AST.AbsoluteAddress, AST.AbsoluteAddress, expectedEnv),
-          new AST.Address(2, 2, AST.AbsoluteAddress, AST.AbsoluteAddress, expectedEnv),
-        ],
+          new AST.Address(2, 2, AST.AbsoluteAddress, AST.AbsoluteAddress, expectedEnv)
+        ]
       ])
     );
     switch (output.tag) {
@@ -830,7 +830,7 @@ describe('constant', () => {
   it('should parse a float', function* () {
     const input = new CU.CharStream('1.234');
     const output = yield* PRF.constant(input);
-    const expected = new AST.Number(1.234);
+    const expected = new AST.NumberLiteral(1.234);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -843,7 +843,7 @@ describe('constant', () => {
   it('should parse an integer', function* () {
     const input = new CU.CharStream('1');
     const output = yield* PRF.constant(input);
-    const expected = new AST.Number(1);
+    const expected = new AST.NumberLiteral(1);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -857,7 +857,7 @@ describe('constant', () => {
     // because it should acutally be handed by the unary operator parser
     const input = new CU.CharStream('123%');
     const output = yield* PRF.constant(input);
-    const expected = new AST.Number(123);
+    const expected = new AST.NumberLiteral(123);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -887,7 +887,7 @@ describe('booleanLiteral', () => {
   it('should parse TRUE', function* () {
     const input = new CU.CharStream('TRUE');
     const output = yield* PRF.booleanLiteral(input);
-    const expected = new AST.Boolean(true);
+    const expected = new AST.BooleanLiteral(true);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -900,7 +900,7 @@ describe('booleanLiteral', () => {
   it('should parse FALSE', function* () {
     const input = new CU.CharStream('FALSE');
     const output = yield* PRF.booleanLiteral(input);
-    const expected = new AST.Boolean(false);
+    const expected = new AST.BooleanLiteral(false);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -928,7 +928,7 @@ describe('data', () => {
   it('should parse any reference to numeric data', function* () {
     const input = new CU.CharStream('3');
     const output = yield* PRF.data(PR.rangeAny)(input);
-    const expected = new AST.Number(3);
+    const expected = new AST.NumberLiteral(3);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -967,7 +967,7 @@ describe('data', () => {
   it('should parse any boolean', function* () {
     const input = new CU.CharStream('FALSE');
     const output = yield* PRF.data(PR.rangeAny)(input);
-    const expected = new AST.Boolean(false);
+    const expected = new AST.BooleanLiteral(false);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -1001,8 +1001,8 @@ describe('fApply', () => {
           new AST.Range([
             [
               new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-            ],
+              new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+            ]
           ])
         ),
         new AST.StringLiteral('red'),
@@ -1011,11 +1011,11 @@ describe('fApply', () => {
           new AST.Range([
             [
               new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-            ],
+              new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+            ]
           ])
         ),
-        new AST.StringLiteral('tx'),
+        new AST.StringLiteral('tx')
       ],
       new AST.FixedArity(2)
     );
@@ -1038,7 +1038,7 @@ describe('fApply', () => {
           PP.EnvStub,
           new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
         ),
-        new AST.Number(5),
+        new AST.NumberLiteral(5)
       ],
       new AST.FixedArity(2)
     );
@@ -1079,11 +1079,11 @@ describe('fApply', () => {
           new AST.Range([
             [
               new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(77, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-            ],
+              new AST.Address(77, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+            ]
           ])
         ),
-        new AST.Number(5),
+        new AST.NumberLiteral(5)
       ],
       AST.VarArgsArityInst
     );
@@ -1099,7 +1099,7 @@ describe('fApply', () => {
   it('should parse function names case insensitively', function* () {
     const input = new CU.CharStream('sum(5)');
     const output = yield* PE.fApply(PR.rangeAny)(input);
-    const expected = new AST.FunctionApplication('SUM', [new AST.Number(5)], new AST.LowBoundArity(1));
+    const expected = new AST.FunctionApplication('SUM', [new AST.NumberLiteral(5)], new AST.LowBoundArity(1));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -1112,7 +1112,7 @@ describe('fApply', () => {
   it('should accept "namespaced" functions', function* () {
     const input = new CU.CharStream('MYORG.CALC(5)');
     const output = yield* PE.fApply(PR.rangeAny)(input);
-    const expected = new AST.FunctionApplication('MYORG.CALC', [new AST.Number(5)], AST.VarArgsArityInst);
+    const expected = new AST.FunctionApplication('MYORG.CALC', [new AST.NumberLiteral(5)], AST.VarArgsArityInst);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -1125,7 +1125,7 @@ describe('fApply', () => {
   it('should accept an underscore in the name', function* () {
     const input = new CU.CharStream('MYORG_CALC(5)');
     const output = yield* PE.fApply(PR.rangeAny)(input);
-    const expected = new AST.FunctionApplication('MYORG_CALC', [new AST.Number(5)], AST.VarArgsArityInst);
+    const expected = new AST.FunctionApplication('MYORG_CALC', [new AST.NumberLiteral(5)], AST.VarArgsArityInst);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -1317,7 +1317,7 @@ describe('binOp', () => {
   it('should parse a comparison expression like 1=2', function* () {
     const input = new CU.CharStream('1=2');
     const output = yield* PE.binOp(PR.rangeAny)(input);
-    const expected = new AST.BinOpExpr('=', new AST.Number(1), new AST.Number(2));
+    const expected = new AST.BinOpExpr('=', new AST.NumberLiteral(1), new AST.NumberLiteral(2));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -1333,7 +1333,7 @@ describe('binOp', () => {
     const expected = new AST.BinOpExpr(
       '>',
       new AST.ReferenceAddress(PP.EnvStub, new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)),
-      new AST.Number(2)
+      new AST.NumberLiteral(2)
     );
     switch (output.tag) {
       case 'success':
@@ -1350,7 +1350,7 @@ describe('binOp', () => {
     const expected = new AST.BinOpExpr(
       '^',
       new AST.ReferenceAddress(PP.EnvStub, new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)),
-      new AST.Number(2)
+      new AST.NumberLiteral(2)
     );
     switch (output.tag) {
       case 'success':
@@ -1369,7 +1369,7 @@ describe('binOp', () => {
       new AST.ReferenceAddress(PP.EnvStub, new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)),
       new AST.BinOpExpr(
         '^',
-        new AST.ParensExpr(new AST.BinOpExpr('-', new AST.Number(1), new AST.Number(2))),
+        new AST.ParensExpr(new AST.BinOpExpr('-', new AST.NumberLiteral(1), new AST.NumberLiteral(2))),
         new AST.ReferenceAddress(
           PP.EnvStub,
           new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
@@ -1388,7 +1388,7 @@ describe('binOp', () => {
   it('should parse a percentage expression like 2%', function* () {
     const input = new CU.CharStream('2%');
     const output = yield* PE.binOp(PR.rangeAny)(input);
-    const expected = new AST.UnaryOpExpr('%', new AST.Number(2));
+    const expected = new AST.UnaryOpExpr('%', new AST.NumberLiteral(2));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -1415,11 +1415,11 @@ describe('parse', () => {
           new AST.Range([
             [
               new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(77, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-            ],
+              new AST.Address(77, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+            ]
           ])
         ),
-        new AST.Number(5),
+        new AST.NumberLiteral(5)
       ],
       new AST.LowBoundArity(1)
     );
@@ -1437,9 +1437,9 @@ describe('parse', () => {
             PP.EnvStub,
             new AST.Address(6, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
           ),
-          new AST.Number(40)
+          new AST.NumberLiteral(40)
         ),
-        new AST.Number(0),
+        new AST.NumberLiteral(0)
       ],
       new AST.LowBoundArity(1)
     );
@@ -1463,11 +1463,11 @@ describe('yieldableParse', () => {
           new AST.Range([
             [
               new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(77, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-            ],
+              new AST.Address(77, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
+            ]
           ])
         ),
-        new AST.Number(5),
+        new AST.NumberLiteral(5)
       ],
       new AST.LowBoundArity(1)
     );

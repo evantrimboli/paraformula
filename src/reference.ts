@@ -202,7 +202,7 @@ export namespace Reference {
   /**
    * Parses a constant.
    */
-  export const constant = P.pipe<number, AST.Number>(P.float)(n => new AST.Number(n));
+  export const constant = P.pipe<number, AST.NumberLiteral>(P.float)(n => new AST.NumberLiteral(n));
 
   /**
    * Parses a string literal.
@@ -216,9 +216,9 @@ export namespace Reference {
   /**
    * Parses a boolean literal.
    */
-  export const booleanLiteral: P.IParser<AST.Expression> = P.pipe<CU.CharStream, AST.Boolean>(
+  export const booleanLiteral: P.IParser<AST.Expression> = P.pipe<CU.CharStream, AST.BooleanLiteral>(
     P.choice(P.str('TRUE'))(P.str('FALSE'))
-  )(b => new AST.Boolean(b.toString().toLowerCase() === 'true'));
+  )(b => new AST.BooleanLiteral(b.toString().toLowerCase() === 'true'));
 
   /**
    * Parses any data.
