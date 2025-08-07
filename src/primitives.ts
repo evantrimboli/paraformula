@@ -11,11 +11,11 @@ export namespace Primitives {
   /**
    * Parse an Excel integer.
    */
-  export const Z = P.choices(
+  export const signedInt = P.choices(
     // leading + sign
-    P.pipe2<CU.CharStream, number, number>(P.str('+'))(P.integer)((_sign, num) => num),
+    P.pipe2<CU.CharStream, number, number>(P.char('+'))(P.integer)((_sign, num) => num),
     // leading - sign
-    P.pipe2<CU.CharStream, number, number>(P.str('-'))(P.integer)((_sign, num) => -num),
+    P.pipe2<CU.CharStream, number, number>(P.char('-'))(P.integer)((_sign, num) => -num),
     // no leading sign
     P.integer
   );
@@ -25,12 +25,12 @@ export namespace Primitives {
    * only the result of `p`.
    * @param p A parser
    */
-  export function wsPad<T>(p: P.IParser<T>) {
+  export function wsPad<T>(p: P.IParser<T>): P.IParser<T> {
     return P.between<CU.CharStream, CU.CharStream, T>(P.ws)(P.ws)(p);
   }
 
   /**
    * Parses a comma surrounded by optional whitespace.
    */
-  export const Comma = wsPad(P.str(','));
+  export const comma = wsPad(P.char(','));
 }

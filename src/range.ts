@@ -8,24 +8,24 @@ export namespace Range {
   /**
    * Parses an A1 range suffix.
    */
-  export const rangeA1Suffix = P.right<CU.CharStream, AST.Address>(P.str(':'))(PA.addrA1);
+  export const rangeA1Suffix = P.right<CU.CharStream, AST.Address>(P.str(':'))(PA.a1Address);
 
   /**
    * Parses an R1C1 range suffix.
    */
-  export const rangeR1C1Suffix = P.right<CU.CharStream, AST.Address>(P.str(':'))(PA.addrR1C1);
+  export const rangeR1C1Suffix = P.right<CU.CharStream, AST.Address>(P.str(':'))(PA.r1c1Address);
 
   /**
    * Parses an A1-style contiguous range.
    */
-  export const rangeA1Contig = P.pipe2<AST.Address, AST.Address, AST.Range>(PA.addrA1)(rangeA1Suffix)(
+  export const rangeA1Contig = P.pipe2<AST.Address, AST.Address, AST.Range>(PA.a1Address)(rangeA1Suffix)(
     (a1, a2) => new AST.Range([[a1, a2]])
   );
 
   /**
    * Parses an R1C1-style contiguous range.
    */
-  export const rangeR1C1Contig = P.pipe2<AST.Address, AST.Address, AST.Range>(PA.addrR1C1)(rangeR1C1Suffix)(
+  export const rangeR1C1Contig = P.pipe2<AST.Address, AST.Address, AST.Range>(PA.r1c1Address)(rangeR1C1Suffix)(
     (a1, a2) => new AST.Range([[a1, a2]])
   );
 
@@ -34,7 +34,7 @@ export namespace Range {
    */
   export const rangeA1Discontig = P.pipe2<AST.Range[], AST.Range, AST.Range>(
     // recursive case
-    P.many1(P.left<AST.Range, CU.CharStream>(rangeA1Contig)(PP.Comma))
+    P.many1(P.left<AST.Range, CU.CharStream>(rangeA1Contig)(PP.comma))
   )(
     // base case
     rangeA1Contig
@@ -48,7 +48,7 @@ export namespace Range {
    */
   export const rangeR1C1Discontig = P.pipe2<AST.Range[], AST.Range, AST.Range>(
     // recursive case
-    P.many1(P.left<AST.Range, CU.CharStream>(rangeR1C1Contig)(PP.Comma))
+    P.many1(P.left<AST.Range, CU.CharStream>(rangeR1C1Contig)(PP.comma))
   )(
     // base case
     rangeR1C1Contig

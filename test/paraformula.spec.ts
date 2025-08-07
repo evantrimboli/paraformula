@@ -1,6 +1,5 @@
 import { CharUtil as CU } from 'parsecco';
 import { Primitives as PP } from '../src/primitives';
-import { Address as PA } from '../src/address';
 import { Range as PR } from '../src/range';
 import { Reference as PRF } from '../src/reference';
 import { ReservedWords as PRW } from '../src/reserved_words';
@@ -9,6 +8,7 @@ import { Paraformula } from '../src/paraformula';
 import { AST } from '../src/ast';
 import { assert, expect } from 'chai';
 import 'mocha';
+import { absA1Addr, absR1C1Addr, r1c1Addr, relA1Addr, relR1C1Addr } from './util';
 
 // instruct mocha to look for generator tests
 require('mocha-generators').install();
@@ -16,7 +16,7 @@ require('mocha-generators').install();
 describe('Z', () => {
   it('should consume an integer with a leading plus sign', function* () {
     const input = new CU.CharStream('+645');
-    const output = yield* PP.Z(input);
+    const output = yield* PP.signedInt(input);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.equal(645);
@@ -27,7 +27,7 @@ describe('Z', () => {
   });
   it('should consume an integer with a leading minus sign', function* () {
     const input = new CU.CharStream('-1000');
-    const output = yield* PP.Z(input);
+    const output = yield* PP.signedInt(input);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.equal(-1000);
@@ -38,7 +38,7 @@ describe('Z', () => {
   });
   it('should consume an integer with no leading sign', function* () {
     const input = new CU.CharStream('0');
-    const output = yield* PP.Z(input);
+    const output = yield* PP.signedInt(input);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.equal(0);
@@ -49,322 +49,11 @@ describe('Z', () => {
   });
 });
 
-describe('addrR', () => {
-  it('should consume an absolute R1 address', function* () {
-    const input = new CU.CharStream('R10C11');
-    const output = yield* PA.addrR(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result).to.equal(10);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should not consume an A1 address', function* () {
-    const input = new CU.CharStream('B33');
-    const output = yield* PA.addrR(input);
-    switch (output.tag) {
-      case 'success':
-        assert.fail();
-      default:
-        assert(true);
-    }
-  });
-
-  it('should not consume a relative R1 address', function* () {
-    const input = new CU.CharStream('R[10]C11');
-    const output = yield* PA.addrR(input);
-    switch (output.tag) {
-      case 'success':
-        assert.fail();
-      default:
-        assert(true);
-    }
-  });
-});
-
-describe('addrRRel', () => {
-  it('should consume a relative R1 address', function* () {
-    const input = new CU.CharStream('R[10]C11');
-    const output = yield* PA.addrRRel(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result).to.equal(10);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should not consume an A1 address', function* () {
-    const input = new CU.CharStream('B33');
-    const output = yield* PA.addrRRel(input);
-    switch (output.tag) {
-      case 'success':
-        assert.fail();
-      default:
-        assert(true);
-    }
-  });
-
-  it('should not consume an absolute R1 address', function* () {
-    const input = new CU.CharStream('R10C11');
-    const output = yield* PA.addrRRel(input);
-    switch (output.tag) {
-      case 'success':
-        assert.fail();
-      default:
-        assert(true);
-    }
-  });
-});
-
-describe('addrC', () => {
-  it('should consume an R1 address', function* () {
-    const input = new CU.CharStream('C11');
-    const output = yield* PA.addrC(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result).to.equal(11);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should not consume an A1 address', function* () {
-    const input = new CU.CharStream('B33');
-    const output = yield* PA.addrC(input);
-    switch (output.tag) {
-      case 'success':
-        assert.fail();
-      default:
-        assert(true);
-    }
-  });
-
-  it('should not consume a relative R1 address', function* () {
-    const input = new CU.CharStream('C[33]');
-    const output = yield* PA.addrC(input);
-    switch (output.tag) {
-      case 'success':
-        assert.fail();
-      default:
-        assert(true);
-    }
-  });
-});
-
-describe('addrCRel', () => {
-  it('should consume a relative R1 address', function* () {
-    const input = new CU.CharStream('C[11]');
-    const output = yield* PA.addrCRel(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result).to.equal(11);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should not consume an A1 address', function* () {
-    const input = new CU.CharStream('B33');
-    const output = yield* PA.addrCRel(input);
-    switch (output.tag) {
-      case 'success':
-        assert.fail();
-      default:
-        assert(true);
-    }
-  });
-
-  it('should not consume an absolute R1 address', function* () {
-    const input = new CU.CharStream('C33');
-    const output = yield* PA.addrCRel(input);
-    switch (output.tag) {
-      case 'success':
-        assert.fail();
-      default:
-        assert(true);
-    }
-  });
-});
-
-describe('addrMode', () => {
-  it('should return absolute address mode for $', function* () {
-    const input = new CU.CharStream('$');
-    const output = yield* PA.addrMode(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result).to.equal(AST.AbsoluteAddress);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should return relative address mode for anything else', function* () {
-    const input = new CU.CharStream('B33');
-    const output = yield* PA.addrMode(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result).to.equal(AST.RelativeAddress);
-        break;
-      default:
-        // should never fail
-        assert.fail();
-    }
-  });
-});
-
-describe('addrA1', () => {
-  it('should consume an ordinary A1 address', function* () {
-    const input = new CU.CharStream('V43');
-    const output = yield* PA.addrA1(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result.row).to.equal(43);
-        expect(output.result.rowMode).to.equal(AST.RelativeAddress);
-        expect(output.result.column).to.equal(22);
-        expect(output.result.colMode).to.equal(AST.RelativeAddress);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should consume an absolutely-addressed A1 address', function* () {
-    const input = new CU.CharStream('$C$12');
-    const output = yield* PA.addrA1(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result.row).to.equal(12);
-        expect(output.result.rowMode).to.equal(AST.AbsoluteAddress);
-        expect(output.result.column).to.equal(3);
-        expect(output.result.colMode).to.equal(AST.AbsoluteAddress);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should consume an A1 address with mixed modes (case 1)', function* () {
-    const input = new CU.CharStream('$B1');
-    const output = yield* PA.addrA1(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result.row).to.equal(1);
-        expect(output.result.rowMode).to.equal(AST.RelativeAddress);
-        expect(output.result.column).to.equal(2);
-        expect(output.result.colMode).to.equal(AST.AbsoluteAddress);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should consume an A1 address with mixed modes (case 2)', function* () {
-    const input = new CU.CharStream('AA$770');
-    const output = yield* PA.addrA1(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result.row).to.equal(770);
-        expect(output.result.rowMode).to.equal(AST.AbsoluteAddress);
-        expect(output.result.column).to.equal(27);
-        expect(output.result.colMode).to.equal(AST.RelativeAddress);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-});
-
-describe('addrR1C1', () => {
-  it('should consume an absolute R1 address', function* () {
-    const input = new CU.CharStream('R23C4');
-    const output = yield* PA.addrR1C1(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result.row).to.equal(23);
-        expect(output.result.rowMode).to.equal(AST.AbsoluteAddress);
-        expect(output.result.column).to.equal(4);
-        expect(output.result.colMode).to.equal(AST.AbsoluteAddress);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should consume a relative R1 address', function* () {
-    const input = new CU.CharStream('R[-23]C[7]');
-    const output = yield* PA.addrR1C1(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result.row).to.equal(-23);
-        expect(output.result.rowMode).to.equal(AST.RelativeAddress);
-        expect(output.result.column).to.equal(7);
-        expect(output.result.colMode).to.equal(AST.RelativeAddress);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should consume a mixed R1 address (case 1)', function* () {
-    const input = new CU.CharStream('R223C[7]');
-    const output = yield* PA.addrR1C1(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result.row).to.equal(223);
-        expect(output.result.rowMode).to.equal(AST.AbsoluteAddress);
-        expect(output.result.column).to.equal(7);
-        expect(output.result.colMode).to.equal(AST.RelativeAddress);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should consume a mixed R1 address (case 2)', function* () {
-    const input = new CU.CharStream('R[105]C1');
-    const output = yield* PA.addrR1C1(input);
-    switch (output.tag) {
-      case 'success':
-        expect(output.result.row).to.equal(105);
-        expect(output.result.rowMode).to.equal(AST.RelativeAddress);
-        expect(output.result.column).to.equal(1);
-        expect(output.result.colMode).to.equal(AST.AbsoluteAddress);
-        break;
-      default:
-        assert.fail();
-    }
-  });
-
-  it('should not consume an A1 address', function* () {
-    const input = new CU.CharStream('R1');
-    const output = yield* PA.addrR1C1(input);
-    switch (output.tag) {
-      case 'success':
-        assert.fail();
-      default:
-        assert(true);
-    }
-  });
-});
-
 describe('rangeA1Contig', () => {
   it('should parse a contiguous A1-style range', function* () {
     const input = new CU.CharStream('A1:B1');
     const output = yield* PR.rangeA1Contig(input);
-    const correct = new AST.Range([
-      [
-        new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(1, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-      ]
-    ]);
+    const correct = new AST.Range([[relA1Addr(1, 1), relA1Addr(1, 2)]]);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(correct);
@@ -377,12 +66,7 @@ describe('rangeA1Contig', () => {
   it('should parse a contiguous R1C1-style range', function* () {
     const input = new CU.CharStream('R[1]C[-1]:R34C11102');
     const output = yield* PR.rangeR1C1Contig(input);
-    const correct = new AST.Range([
-      [
-        new AST.Address(1, -1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(34, 11102, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub)
-      ]
-    ]);
+    const correct = new AST.Range([[relR1C1Addr(1, -1), absA1Addr(34, 11102)]]);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(correct);
@@ -420,14 +104,8 @@ describe('rangeA1Discontig', () => {
     const input = new CU.CharStream('A1:B10,C1:D10');
     const output = yield* PR.rangeA1Discontig(input);
     const correct = new AST.Range([
-      [
-        new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(10, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-      ],
-      [
-        new AST.Address(1, 3, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(10, 4, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-      ]
+      [relA1Addr(1, 1), relA1Addr(10, 2)],
+      [relA1Addr(1, 3), relA1Addr(10, 4)]
     ]);
     switch (output.tag) {
       case 'success':
@@ -444,14 +122,8 @@ describe('rangeR1C1Discontig', () => {
     const input = new CU.CharStream('R1C1:R10C2,R1C3:R10C4');
     const output = yield* PR.rangeR1C1Discontig(input);
     const correct = new AST.Range([
-      [
-        new AST.Address(1, 1, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub),
-        new AST.Address(10, 2, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub)
-      ],
-      [
-        new AST.Address(1, 3, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub),
-        new AST.Address(10, 4, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub)
-      ]
+      [absR1C1Addr(1, 1), absR1C1Addr(10, 2)],
+      [absR1C1Addr(1, 3), absR1C1Addr(10, 4)]
     ]);
     switch (output.tag) {
       case 'success':
@@ -468,14 +140,8 @@ describe('rangeAny', () => {
     const input = new CU.CharStream('A1:B10,C1:D10');
     const output = yield* PR.rangeAny(input);
     const correct = new AST.Range([
-      [
-        new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(10, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-      ],
-      [
-        new AST.Address(1, 3, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(10, 4, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-      ]
+      [relA1Addr(1, 1), relA1Addr(10, 2)],
+      [relA1Addr(1, 3), relA1Addr(10, 4)]
     ]);
     switch (output.tag) {
       case 'success':
@@ -489,12 +155,7 @@ describe('rangeAny', () => {
   it('should parse a contiguous R1C1-style range', function* () {
     const input = new CU.CharStream('R[1]C[-1]:R34C11102');
     const output = yield* PR.rangeAny(input);
-    const correct = new AST.Range([
-      [
-        new AST.Address(1, -1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-        new AST.Address(34, 11102, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub)
-      ]
-    ]);
+    const correct = new AST.Range([[relR1C1Addr(1, -1), absR1C1Addr(34, 11102)]]);
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(correct);
@@ -642,15 +303,7 @@ describe('rangeReference', () => {
   it('should parse a bare range reference', function* () {
     const input = new CU.CharStream('A1:B2');
     const output = yield* PRF.rangeReference(PR.rangeAny)(input);
-    const expected = new AST.ReferenceRange(
-      PP.EnvStub,
-      new AST.Range([
-        [
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ]
-      ])
-    );
+    const expected = new AST.ReferenceRange(PP.EnvStub, new AST.Range([[relA1Addr(1, 1), relA1Addr(2, 2)]]));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -665,12 +318,7 @@ describe('rangeReference', () => {
     const output = yield* PRF.rangeReference(PR.rangeAny)(input);
     const expected = new AST.ReferenceRange(
       new AST.Env('', '', 'sheetysheet'),
-      new AST.Range([
-        [
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ]
-      ])
+      new AST.Range([[relA1Addr(1, 1), relA1Addr(2, 2)]])
     );
     switch (output.tag) {
       case 'success':
@@ -686,12 +334,7 @@ describe('rangeReference', () => {
     const output = yield* PRF.rangeReference(PR.rangeAny)(input);
     const expected = new AST.ReferenceRange(
       new AST.Env('', 'foobar.xlsx', 'sheetysheet'),
-      new AST.Range([
-        [
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ]
-      ])
+      new AST.Range([[relA1Addr(1, 1), relA1Addr(2, 2)]])
     );
     switch (output.tag) {
       case 'success':
@@ -708,12 +351,7 @@ describe('rangeReference', () => {
     const expectedEnv = new AST.Env('C:\\Reports\\', 'SourceWorkbook.xlsx', 'Sheet1');
     const expected = new AST.ReferenceRange(
       expectedEnv,
-      new AST.Range([
-        [
-          new AST.Address(1, 1, AST.AbsoluteAddress, AST.AbsoluteAddress, expectedEnv),
-          new AST.Address(2, 2, AST.AbsoluteAddress, AST.AbsoluteAddress, expectedEnv)
-        ]
-      ])
+      new AST.Range([[absA1Addr(1, 1, expectedEnv), absA1Addr(2, 2, expectedEnv)]])
     );
     switch (output.tag) {
       case 'success':
@@ -729,10 +367,7 @@ describe('addressReference', () => {
   it('should parse a bare address reference', function* () {
     const input = new CU.CharStream('A1');
     const output = yield* PRF.addressReference(input);
-    const expected = new AST.ReferenceAddress(
-      PP.EnvStub,
-      new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-    );
+    const expected = new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -746,10 +381,7 @@ describe('addressReference', () => {
     const input = new CU.CharStream('Sheet1!A1');
     const output = yield* PRF.addressReference(input);
     const expectedEnv = new AST.Env('', '', 'Sheet1');
-    const expected = new AST.ReferenceAddress(
-      expectedEnv,
-      new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, expectedEnv)
-    );
+    const expected = new AST.ReferenceAddress(expectedEnv, relA1Addr(1, 1, expectedEnv));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -763,10 +395,7 @@ describe('addressReference', () => {
     const input = new CU.CharStream("'Sheet1'!A1");
     const output = yield* PRF.addressReference(input);
     const expectedEnv = new AST.Env('', '', 'Sheet1');
-    const expected = new AST.ReferenceAddress(
-      expectedEnv,
-      new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, expectedEnv)
-    );
+    const expected = new AST.ReferenceAddress(expectedEnv, relA1Addr(1, 1, expectedEnv));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -780,10 +409,7 @@ describe('addressReference', () => {
     const input = new CU.CharStream("'[Foobar]Sheet1'!A1");
     const output = yield* PRF.addressReference(input);
     const expectedEnv = new AST.Env('', 'Foobar', 'Sheet1');
-    const expected = new AST.ReferenceAddress(
-      expectedEnv,
-      new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, expectedEnv)
-    );
+    const expected = new AST.ReferenceAddress(expectedEnv, relA1Addr(1, 1, expectedEnv));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -797,10 +423,7 @@ describe('addressReference', () => {
     const input = new CU.CharStream("'C:\\Reports\\[SourceWorkbook.xlsx]Sheet1'!R34C[-78]");
     const output = yield* PRF.addressReference(input);
     const expectedEnv = new AST.Env('C:\\Reports\\', 'SourceWorkbook.xlsx', 'Sheet1');
-    const expected = new AST.ReferenceAddress(
-      expectedEnv,
-      new AST.Address(34, -78, AST.AbsoluteAddress, AST.RelativeAddress, expectedEnv)
-    );
+    const expected = new AST.ReferenceAddress(expectedEnv, r1c1Addr(34, -78, 'absolute', 'relative', expectedEnv));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -996,25 +619,9 @@ describe('fApply', () => {
     const expected = new AST.FunctionApplication(
       'COUNTIFS',
       [
-        new AST.ReferenceRange(
-          PP.EnvStub,
-          new AST.Range([
-            [
-              new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-            ]
-          ])
-        ),
+        new AST.ReferenceRange(PP.EnvStub, new AST.Range([[relA1Addr(1, 1), relA1Addr(1, 1)]])),
         new AST.StringLiteral('red'),
-        new AST.ReferenceRange(
-          PP.EnvStub,
-          new AST.Range([
-            [
-              new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-            ]
-          ])
-        ),
+        new AST.ReferenceRange(PP.EnvStub, new AST.Range([[relA1Addr(2, 2), relA1Addr(2, 2)]])),
         new AST.StringLiteral('tx')
       ],
       new AST.FixedArity(2)
@@ -1033,13 +640,7 @@ describe('fApply', () => {
     const output = yield* PE.fApply(PR.rangeAny)(input);
     const expected = new AST.FunctionApplication(
       'CEILING',
-      [
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ),
-        new AST.NumberLiteral(5)
-      ],
+      [new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)), new AST.NumberLiteral(5)],
       new AST.FixedArity(2)
     );
     switch (output.tag) {
@@ -1070,19 +671,8 @@ describe('fApply', () => {
     const expected = new AST.FunctionApplication(
       'FOO',
       [
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ),
-        new AST.ReferenceRange(
-          PP.EnvStub,
-          new AST.Range([
-            [
-              new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(77, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-            ]
-          ])
-        ),
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
+        new AST.ReferenceRange(PP.EnvStub, new AST.Range([[relA1Addr(2, 2), relA1Addr(77, 2)]])),
         new AST.NumberLiteral(5)
       ],
       AST.VarArgsArityInst
@@ -1142,8 +732,8 @@ describe('binOp', () => {
     const output = yield* PE.binOp(PR.rangeAny)(input);
     const expected = new AST.BinOpExpr(
       '+',
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)),
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub))
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(2, 2))
     );
     switch (output.tag) {
       case 'success':
@@ -1161,16 +751,10 @@ describe('binOp', () => {
       '+',
       new AST.BinOpExpr(
         '*',
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ),
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        )
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(2, 2))
       ),
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(3, 3, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub))
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(3, 3))
     );
     switch (output.tag) {
       case 'success':
@@ -1186,8 +770,8 @@ describe('binOp', () => {
     const output = yield* PE.binOp(PR.rangeAny)(input);
     const expected = new AST.BinOpExpr(
       '-',
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)),
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub))
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(2, 2))
     );
     switch (output.tag) {
       case 'success':
@@ -1203,8 +787,8 @@ describe('binOp', () => {
     const output = yield* PE.binOp(PR.rangeAny)(input);
     const expected = new AST.BinOpExpr(
       '/',
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)),
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub))
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(2, 2))
     );
     switch (output.tag) {
       case 'success':
@@ -1222,16 +806,10 @@ describe('binOp', () => {
       '+',
       new AST.BinOpExpr(
         '-',
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ),
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        )
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(2, 2))
       ),
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(3, 3, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub))
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(3, 3))
     );
     switch (output.tag) {
       case 'success':
@@ -1249,16 +827,10 @@ describe('binOp', () => {
       '*',
       new AST.BinOpExpr(
         '/',
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ),
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        )
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(2, 2))
       ),
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(3, 3, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub))
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(3, 3))
     );
     switch (output.tag) {
       case 'success':
@@ -1272,13 +844,7 @@ describe('binOp', () => {
   it('should parse unary expressions', function* () {
     const input = new CU.CharStream('-R23C45');
     const output = yield* PE.binOp(PR.rangeAny)(input);
-    const expected = new AST.UnaryOpExpr(
-      '-',
-      new AST.ReferenceAddress(
-        PP.EnvStub,
-        new AST.Address(23, 45, AST.AbsoluteAddress, AST.AbsoluteAddress, PP.EnvStub)
-      )
-    );
+    const expected = new AST.UnaryOpExpr('-', new AST.ReferenceAddress(PP.EnvStub, absR1C1Addr(23, 45)));
     switch (output.tag) {
       case 'success':
         expect(output.result).to.eql(expected);
@@ -1332,7 +898,7 @@ describe('binOp', () => {
     const output = yield* PE.binOp(PR.rangeAny)(input);
     const expected = new AST.BinOpExpr(
       '>',
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)),
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
       new AST.NumberLiteral(2)
     );
     switch (output.tag) {
@@ -1349,7 +915,7 @@ describe('binOp', () => {
     const output = yield* PE.binOp(PR.rangeAny)(input);
     const expected = new AST.BinOpExpr(
       '^',
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)),
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
       new AST.NumberLiteral(2)
     );
     switch (output.tag) {
@@ -1366,14 +932,11 @@ describe('binOp', () => {
     const output = yield* PE.binOp(PR.rangeAny)(input);
     const expected = new AST.BinOpExpr(
       '^',
-      new AST.ReferenceAddress(PP.EnvStub, new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)),
+      new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
       new AST.BinOpExpr(
         '^',
         new AST.ParensExpr(new AST.BinOpExpr('-', new AST.NumberLiteral(1), new AST.NumberLiteral(2))),
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        )
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(2, 2))
       )
     );
     switch (output.tag) {
@@ -1406,19 +969,8 @@ describe('parse', () => {
     const expected = new AST.FunctionApplication(
       'SUM',
       [
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ),
-        new AST.ReferenceRange(
-          PP.EnvStub,
-          new AST.Range([
-            [
-              new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(77, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-            ]
-          ])
-        ),
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
+        new AST.ReferenceRange(PP.EnvStub, new AST.Range([[relA1Addr(2, 2), relA1Addr(77, 2)]])),
         new AST.NumberLiteral(5)
       ],
       new AST.LowBoundArity(1)
@@ -1431,14 +983,7 @@ describe('parse', () => {
     const expected = new AST.FunctionApplication(
       'MAX',
       [
-        new AST.BinOpExpr(
-          '-',
-          new AST.ReferenceAddress(
-            PP.EnvStub,
-            new AST.Address(6, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-          ),
-          new AST.NumberLiteral(40)
-        ),
+        new AST.BinOpExpr('-', new AST.ReferenceAddress(PP.EnvStub, relA1Addr(6, 2)), new AST.NumberLiteral(40)),
         new AST.NumberLiteral(0)
       ],
       new AST.LowBoundArity(1)
@@ -1454,19 +999,8 @@ describe('yieldableParse', () => {
     const expected = new AST.FunctionApplication(
       'SUM',
       [
-        new AST.ReferenceAddress(
-          PP.EnvStub,
-          new AST.Address(1, 1, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-        ),
-        new AST.ReferenceRange(
-          PP.EnvStub,
-          new AST.Range([
-            [
-              new AST.Address(2, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub),
-              new AST.Address(77, 2, AST.RelativeAddress, AST.RelativeAddress, PP.EnvStub)
-            ]
-          ])
-        ),
+        new AST.ReferenceAddress(PP.EnvStub, relA1Addr(1, 1)),
+        new AST.ReferenceRange(PP.EnvStub, new AST.Range([[relA1Addr(2, 2), relA1Addr(77, 2)]])),
         new AST.NumberLiteral(5)
       ],
       new AST.LowBoundArity(1)
@@ -1482,9 +1016,9 @@ describe('AST.Expression', () => {
     switch (output.type) {
       case AST.ReferenceAddress.type:
         expect(output.address.column).to.eql(1);
-        expect(output.address.colMode).to.eql(AST.RelativeAddress);
+        expect(output.address.colMode).to.eql('relative');
         expect(output.address.row).to.eql(1);
-        expect(output.address.rowMode).to.eql(AST.RelativeAddress);
+        expect(output.address.rowMode).to.eql('relative');
         break;
       default:
         assert.fail();

@@ -331,7 +331,7 @@ export namespace Expression {
 
       // If it's not a pre-defined function, just parse it as varargs
       if (!def) {
-        const next = P.left<AST.Expression[], CU.CharStream>(sepBy(expr(R))(PP.Comma))(P.char(')'));
+        const next = P.left<AST.Expression[], CU.CharStream>(sepBy(expr(R))(PP.comma))(P.char(')'));
         return P.bind<AST.Expression[], AST.FunctionApplication>(next)(exprs =>
           P.result(new AST.FunctionApplication(name, exprs, AST.VarArgsArityInst))
         );
@@ -340,7 +340,7 @@ export namespace Expression {
       const { minArity, maxArity } = def;
 
       if (maxArity !== null) {
-        const next = P.left<AST.Expression[], CU.CharStream>(sepBy(expr(R))(PP.Comma))(P.char(')'));
+        const next = P.left<AST.Expression[], CU.CharStream>(sepBy(expr(R))(PP.comma))(P.char(')'));
         return P.bind<AST.Expression[], AST.FunctionApplication>(next)(exprs =>
           exprs.length < minArity || exprs.length > maxArity
             ? P.zero<AST.FunctionApplication>(`Arity between ${minArity}, ${maxArity} expected for function ${name}`)
@@ -348,7 +348,7 @@ export namespace Expression {
         );
       }
 
-      const next = P.left<AST.Expression[], CU.CharStream>(sepBy1(expr(R))(PP.Comma))(P.char(')'));
+      const next = P.left<AST.Expression[], CU.CharStream>(sepBy1(expr(R))(PP.comma))(P.char(')'));
       return P.bind<AST.Expression[], AST.FunctionApplication>(next)(exprs =>
         exprs.length < minArity
           ? P.zero<AST.FunctionApplication>(`Arity ${minArity} expected for function ${name}`)

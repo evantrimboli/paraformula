@@ -1,119 +1,63 @@
 import { AST } from './ast';
 import { Primitives as P, CharUtil as CU } from 'parsecco';
 import { Primitives as PP } from './primitives';
+import { colCharsToInt } from './util';
 
 export namespace Address {
-  /**
-   * Convert an Excel A1 column string into a number.
-   * @param col A1 column string.
-   * @returns Number.
-   */
-  const columnToInt = (col: string): number => {
-    const cti = (idx: number): number => {
-      // get ASCII code and then subtract 64 to get Excel column #
-      const code = col.charCodeAt(idx) - 64;
-      // the value depends on the position; a column is a base-26 number
-      const num = Math.pow(26, col.length - idx - 1) * code;
-      if (idx === 0) {
-        // base case
-        return num;
-      } else {
-        // add this letter to number and recurse
-        return num + cti(idx - 1);
-      }
-    };
-    return cti(col.length - 1);
+  const setupAddressRowOrColParser = (char: string) => {
+    const charMatcher = P.char(char);
+
+    const emptyPair = new AST.R1C1Pair();
+
+    const relative = P.pipe<number, AST.R1C1Pair>(
+      P.between<CU.CharStream, CU.CharStream, number>(P.str(char + '['))(P.char(']'))(PP.signedInt)
+    )(n => new AST.R1C1Pair(n, 'relative'));
+
+    const absolute = P.pipe2<CU.CharStream, number, AST.R1C1Pair>(charMatcher)(P.integer)(
+      (_, n) => new AST.R1C1Pair(n, 'absolute')
+    );
+
+    const charOnly = P.pipe<CU.CharStream, AST.R1C1Pair>(charMatcher)(() => emptyPair);
+
+    return P.choices(relative, absolute, charOnly);
   };
 
-  /**
-   * Parses the `R` part of an absolute R1C1 address.
-   * @param istream input CharStream.
-   */
-  export const addrR = P.right<CU.CharStream, number>(P.str('R'))(P.integer);
+  export const r1c1Row = setupAddressRowOrColParser('R');
+  export const r1c1Col = setupAddressRowOrColParser('C');
 
-  /**
-   * Parses the `R` part of a relative R1C1 address.
-   */
-  export const addrRRel = P.between<CU.CharStream, CU.CharStream, number>(P.str('R['))(P.str(']'))(PP.Z);
-
-  /**
-   * Parses the `C` part of an absolute R1C1 address.
-   * @param istream input CharStream.
-   */
-  export const addrC = P.right<CU.CharStream, number>(P.str('C'))(P.integer);
-
-  /**
-   * Parses the `C` part of a relative R1C1 address.
-   * @param istream input CharStream.
-   */
-  export const addrCRel = P.between<CU.CharStream, CU.CharStream, number>(P.str('C['))(P.str(']'))(PP.Z);
-
-  /**
-   * Parses the `R` part of an R1C1 address.
-   */
-  export const addrRMode = P.choice(P.pipe<number, [number, AST.AddressMode]>(addrRRel)(r => [r, AST.RelativeAddress]))(
-    P.pipe<number, [number, AST.AddressMode]>(addrR)(r => [r, AST.AbsoluteAddress])
+  export const r1c1Address = P.pipe2<AST.R1C1Pair, AST.R1C1Pair, AST.Address>(r1c1Row)(r1c1Col)((row, col) =>
+    AST.Address.r1c1(row, col, PP.EnvStub)
   );
 
-  /**
-   * Parses the `C` part of an R1C1 address.
-   */
-  export const addrCMode = P.choice(P.pipe<number, [number, AST.AddressMode]>(addrCRel)(c => [c, AST.RelativeAddress]))(
-    P.pipe<number, [number, AST.AddressMode]>(addrC)(c => [c, AST.AbsoluteAddress])
+  const a1Mode = P.choice<AST.AddressMode>(P.pipe<CU.CharStream, AST.AddressMode>(P.char('$'))(() => 'absolute'))(
+    P.pipe<undefined, AST.AddressMode>(P.ok(undefined))(() => 'relative')
   );
 
-  /**
-   * Parses an R1C1 address.
-   */
-  export const addrR1C1 = P.pipe2<[number, AST.AddressMode], [number, AST.AddressMode], AST.Address>(addrRMode)(
-    addrCMode
-  )(([row, rowMode], [col, colMode]) => {
-    return new AST.Address(row, col, rowMode, colMode, PP.EnvStub);
-  });
-
-  /**
-   * Parses an address mode token.
-   */
-  export const addrMode = P.choice<AST.AddressMode>(
-    P.pipe<CU.CharStream, AST.AddressMode>(P.str('$'))(() => AST.AbsoluteAddress)
-  )(P.pipe<undefined, AST.AddressMode>(P.ok(undefined))(() => AST.RelativeAddress));
-
-  /**
-   * Parses the column component of an A1 address.
-   */
-  export const addrA = P.pipe<CU.CharStream[], CU.CharStream>(P.many1(P.upper))(css => CU.CharStream.concat(css));
+  const a1ColPart = P.pipe<CU.CharStream[], CU.CharStream>(P.many1(P.upper))(CU.CharStream.concat);
 
   /**
    * Parses the column component of an A1 address, including address mode.
    */
-  export const addrAMode = P.pipe2<AST.AddressMode, CU.CharStream, [AST.AddressMode, CU.CharStream]>(addrMode)(addrA)(
-    (mode, col) => [mode, col]
+  const a1Col = P.pipe2<AST.AddressMode, CU.CharStream, AST.A1Pair>(a1Mode)(a1ColPart)(
+    (mode, col) => new AST.A1Pair(colCharsToInt(col.toString()), mode)
   );
-
-  /**
-   * Parses the row component of an A1 address.
-   */
-  export const addr1 = P.integer;
 
   /**
    * Parses the row component of an A1 address, including address mode.
    */
-  export const addr1Mode = P.pipe2<AST.AddressMode, number, [AST.AddressMode, number]>(addrMode)(addr1)((mode, col) => [
-    mode,
-    col
-  ]);
+  const a1Row = P.pipe2<AST.AddressMode, number, AST.A1Pair>(a1Mode)(P.integer)(
+    (mode, row) => new AST.A1Pair(row, mode)
+  );
 
   /**
    * Parses an A1 address, with address modes.
    */
-  export const addrA1 = P.pipe2<[AST.AddressMode, CU.CharStream], [AST.AddressMode, number], AST.Address>(addrAMode)(
-    addr1Mode
-  )(
-    ([colMode, col], [rowMode, row]) => new AST.Address(row, columnToInt(col.toString()), rowMode, colMode, PP.EnvStub)
+  export const a1Address = P.pipe2<AST.A1Pair, AST.A1Pair, AST.Address>(a1Col)(a1Row)((col, row) =>
+    AST.Address.a1(row, col, PP.EnvStub)
   );
 
   /**
    * Parses either an A1 or R1C1 address.
    */
-  export const addrAny = P.choice(addrR1C1)(addrA1);
+  export const addrAny = P.choice(r1c1Address)(a1Address);
 }

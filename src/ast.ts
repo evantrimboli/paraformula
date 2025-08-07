@@ -1,14 +1,6 @@
-export namespace AST {
-  const intToColChars = (dividend: number): string => {
-    let quot = Math.floor(dividend / 26);
-    const rem = dividend % 26;
-    if (rem === 0) {
-      quot -= 1;
-    }
-    const ltr = rem === 0 ? 'Z' : String.fromCharCode(64 + rem);
-    return quot === 0 ? ltr : intToColChars(quot) + ltr;
-  };
+import { intToColChars } from './util';
 
+export namespace AST {
   export class Env {
     static readonly type: 'Env' = 'Env';
     readonly tag = Env.type;
@@ -31,76 +23,124 @@ export namespace AST {
     }
   }
 
-  export interface AbsoluteAddressMode {
-    readonly type: 'AbsoluteAddress';
-  }
-
-  export interface RelativeAddressMode {
-    readonly type: 'RelativeAddress';
-  }
-
-  export const AbsoluteAddress: AbsoluteAddressMode = {
-    type: 'AbsoluteAddress'
-  };
-
-  export const RelativeAddress: RelativeAddressMode = {
-    type: 'RelativeAddress'
-  };
-
-  export type AddressMode = AbsoluteAddressMode | RelativeAddressMode;
-
+  export type AddressMode = 'absolute' | 'relative';
   const singleQuoteRe = /'/g;
-  const getA1Prefix = (mode: AddressMode): string => (mode.type === 'AbsoluteAddress' ? '$' : '');
+
+  const getEnvPrefix = (env: Env): string => {
+    if (env.isEmpty()) {
+      return '';
+    }
+
+    const { worksheetName, workbookName, path } = env;
+    let prefix = '';
+    if (path) {
+      prefix += path;
+    }
+
+    if (workbookName) {
+      prefix += '[' + workbookName + ']';
+    }
+
+    if (worksheetName) {
+      prefix += worksheetName.replace(singleQuoteRe, `''`);
+    }
+
+    return `'${prefix}'!`;
+  };
+
+  const stringifyR1C1Item = (char: 'R' | 'C', value: number, mode: AddressMode): string => {
+    let s = char;
+    const relative = mode === 'relative';
+
+    if (value > 0) {
+      if (relative) {
+        s += '[';
+      }
+      s += value.toString();
+      if (relative) {
+        s += ']';
+      }
+    }
+    return s;
+  };
+
+  const stringifyR1C1 = (address: Address): string =>
+    stringifyR1C1Item('R', address.row, address.rowMode) + stringifyR1C1Item('C', address.column, address.colMode);
+
+  const getA1Prefix = (mode: AddressMode): string => (mode === 'absolute' ? '$' : '');
+
+  const stringifyA1Item = (value: string | number, mode: AddressMode) => getA1Prefix(mode) + value.toString();
+
+  const stringifyA1 = (address: Address): string =>
+    stringifyA1Item(intToColChars(address.column), address.colMode) + stringifyA1Item(address.row, address.rowMode);
+
+  export class R1C1Pair {
+    readonly type = 'R1C1';
+    readonly value: number;
+    readonly mode: AddressMode;
+
+    constructor();
+
+    constructor(value: number, mode: AddressMode);
+
+    constructor(value?: number, mode?: AddressMode) {
+      this.value = value === undefined ? 0 : value;
+      this.mode = mode === undefined ? 'relative' : mode;
+    }
+  }
+
+  export class A1Pair {
+    readonly type = 'A1';
+    readonly value: number;
+    readonly mode: AddressMode;
+
+    constructor(value: number, mode: AddressMode) {
+      this.value = value === undefined ? 0 : value;
+      this.mode = mode === undefined ? 'relative' : mode;
+    }
+  }
+
+  type AddressType = 'r1c1' | 'a1';
 
   export class Address {
-    static readonly type: 'Address' = 'Address';
-    readonly type = Address.type;
     readonly row: number;
     readonly column: number;
     readonly rowMode: AddressMode;
     readonly colMode: AddressMode;
     readonly env: Env;
 
-    constructor(row: number, column: number, rowMode: AddressMode, colMode: AddressMode, env: Env) {
+    #type: AddressType;
+
+    static r1c1(row: R1C1Pair, column: R1C1Pair, env: Env): Address {
+      return new Address(row.value, column.value, row.mode, column.mode, env, 'r1c1');
+    }
+
+    static a1(row: A1Pair, column: A1Pair, env: Env): Address {
+      return new Address(row.value, column.value, row.mode, column.mode, env, 'a1');
+    }
+
+    private constructor(
+      row: number,
+      column: number,
+      rowMode: AddressMode,
+      colMode: AddressMode,
+      env: Env,
+      type: AddressType
+    ) {
       this.row = row;
       this.column = column;
       this.rowMode = rowMode;
       this.colMode = colMode;
       this.env = env;
-    }
-
-    get path() {
-      return this.env.path;
-    }
-
-    get workbookName() {
-      return this.env.workbookName;
-    }
-
-    get worksheetName() {
-      return this.env.worksheetName;
-    }
-
-    equals(a: Address) {
-      // note that we explicitly do not compare paths since two different workbooks
-      // can have the "same address" but will live at different paths
-      return (
-        this.row === a.row &&
-        this.column === a.column &&
-        this.worksheetName === a.worksheetName &&
-        this.workbookName === a.workbookName
-      );
+      this.#type = type;
     }
 
     toString(): string {
       return '(' + this.column.toString() + ',' + this.row.toString() + ')';
     }
 
-    /**
-     * Pretty-prints an address in A1 format.
-     */
-    toFormula(r1c1: boolean = false): string {
-      return r1c1 ? this.toR1C1Ref() : this.toA1Ref();
+    toFormula(): string {
+      return this.#type === 'r1c1' ? this.#toR1C1Ref() : this.#toA1Ref();
     }
 
     /**
@@ -109,48 +149,15 @@ export namespace AST {
      * @returns An Address.
      */
     copyWithNewEnv(env: Env) {
-      return new Address(this.row, this.column, this.rowMode, this.colMode, env);
+      return new Address(this.row, this.column, this.rowMode, this.colMode, env, this.#type);
     }
 
-    #toEnvPrefix(): string {
-      if (this.env.isEmpty()) {
-        return '';
-      }
-
-      const { worksheetName, workbookName, path } = this.env;
-      let prefix = '';
-      if (path) {
-        prefix += path;
-      }
-
-      if (workbookName) {
-        prefix += '[' + workbookName + ']';
-      }
-
-      if (worksheetName) {
-        prefix += worksheetName.replace(singleQuoteRe, `''`);
-      }
-
-      return `'${prefix}'!`;
+    #toA1Ref(): string {
+      return getEnvPrefix(this.env) + stringifyA1(this);
     }
 
-    toA1Ref(): string {
-      return this.#toEnvPrefix() + this.toA1RefOnly();
-    }
-
-    toR1C1Ref(): string {
-      return this.#toEnvPrefix() + this.toR1C1RefOnly();
-    }
-
-    toA1RefOnly(): string {
-      const colPrefix = getA1Prefix(this.colMode);
-      const rowPrefix = getA1Prefix(this.rowMode);
-
-      return colPrefix + intToColChars(this.column) + rowPrefix + this.row.toString();
-    }
-
-    toR1C1RefOnly(): string {
-      return 'R' + this.row + 'C' + this.column;
+    #toR1C1Ref(): string {
+      return getEnvPrefix(this.env) + stringifyR1C1(this);
     }
   }
 
@@ -175,13 +182,6 @@ export namespace AST {
     }
 
     /**
-     * Returns true if the range object represents a contiguous range.
-     */
-    get isContiguous(): boolean {
-      return this.regions.length === 1;
-    }
-
-    /**
      * Returns a copy of this Range but with an updated Env.
      * @param env An Env object.
      * @returns A Range.
@@ -195,12 +195,12 @@ export namespace AST {
       return 'List(' + sregs.join(',') + ')';
     }
 
-    toFormula(r1c1: boolean = false): string {
-      return this.regions.map(([tl, br]) => tl.toFormula(r1c1) + ':' + br.toFormula(r1c1)).join(',');
+    toFormula(): string {
+      return this.regions.map(([tl, br]) => tl.toFormula() + ':' + br.toFormula()).join(',');
     }
   }
 
-  export interface IExpr {
+  export interface BaseExpression {
     /**
      * Returns the type tag for the expression subtype,
      * for use in pattern-matching expressions. Also
@@ -211,10 +211,8 @@ export namespace AST {
 
     /**
      * Generates a valid Excel formula from this expression.
-     * @param r1c1 If true, returns a formula with R1C1 references,
-     * otherwise returns a formula with A1 references.
      */
-    toFormula(r1c1: boolean): string;
+    toFormula(): string;
 
     /**
      * Pretty-prints the AST as a string.  Note that this
@@ -223,7 +221,7 @@ export namespace AST {
     toString(): string;
   }
 
-  export class ReferenceRange implements IExpr {
+  export class ReferenceRange implements BaseExpression {
     static readonly type: 'ReferenceRange' = 'ReferenceRange';
     readonly type = ReferenceRange.type;
     readonly range: Range;
@@ -232,8 +230,8 @@ export namespace AST {
       this.range = range.copyWithNewEnv(env);
     }
 
-    toFormula(r1c1: boolean = false): string {
-      return this.range.toFormula(r1c1);
+    toFormula(): string {
+      return this.range.toFormula();
     }
 
     toString(): string {
@@ -241,7 +239,7 @@ export namespace AST {
     }
   }
 
-  export class ReferenceAddress implements IExpr {
+  export class ReferenceAddress implements BaseExpression {
     static readonly type: 'ReferenceAddress' = 'ReferenceAddress';
     readonly type = ReferenceAddress.type;
     readonly address: Address;
@@ -254,12 +252,12 @@ export namespace AST {
       return 'ReferenceAddress(' + this.address.toString() + ')';
     }
 
-    toFormula(r1c1: boolean = false): string {
-      return this.address.toFormula(r1c1);
+    toFormula(): string {
+      return this.address.toFormula();
     }
   }
 
-  export class ReferenceNamed implements IExpr {
+  export class ReferenceNamed implements BaseExpression {
     static readonly type: 'ReferenceNamed' = 'ReferenceNamed';
     readonly type = ReferenceNamed.type;
     readonly varName: string;
@@ -303,7 +301,7 @@ export namespace AST {
 
   export type Arity = FixedArity | LowBoundArity | VarArgsArity;
 
-  export class FunctionApplication implements IExpr {
+  export class FunctionApplication implements BaseExpression {
     static readonly type: 'FunctionApplication' = 'FunctionApplication';
     readonly type = FunctionApplication.type;
     readonly name: string;
@@ -320,12 +318,12 @@ export namespace AST {
       return 'Function[' + this.name + ',' + this.arity + '](' + this.args.map(arg => arg.toFormula).join(',') + ')';
     }
 
-    toFormula(r1c1: boolean = false): string {
-      return this.name + '(' + this.args.map(arg => arg.toFormula(r1c1)).join(',') + ')';
+    toFormula(): string {
+      return this.name + '(' + this.args.map(arg => arg.toFormula()).join(',') + ')';
     }
   }
 
-  export class NumberLiteral implements IExpr {
+  export class NumberLiteral implements BaseExpression {
     static readonly type: 'NumberLiteral' = 'NumberLiteral';
     readonly type = NumberLiteral.type;
     readonly value: number;
@@ -343,7 +341,7 @@ export namespace AST {
     }
   }
 
-  export class StringLiteral implements IExpr {
+  export class StringLiteral implements BaseExpression {
     static readonly type: 'StringLiteral' = 'StringLiteral';
     readonly type = StringLiteral.type;
     readonly value: string;
@@ -361,7 +359,7 @@ export namespace AST {
     }
   }
 
-  export class BooleanLiteral implements IExpr {
+  export class BooleanLiteral implements BaseExpression {
     static readonly type: 'BooleanLiteral' = 'BooleanLiteral';
     readonly type = BooleanLiteral.type;
     readonly value: boolean;
@@ -382,7 +380,7 @@ export namespace AST {
   // this should only ever be instantiated by
   // the reserved words class, which is designed
   // to fail
-  export class PoisonPill implements IExpr {
+  export class PoisonPill implements BaseExpression {
     static readonly type: 'PoisonPill' = 'PoisonPill';
     readonly type = PoisonPill.type;
 
@@ -395,7 +393,7 @@ export namespace AST {
     }
   }
 
-  export class ParensExpr implements IExpr {
+  export class ParensExpr implements BaseExpression {
     static readonly type: 'ParensExpr' = 'ParensExpr';
     readonly type = ParensExpr.type;
     readonly expr: Expression;
@@ -408,12 +406,12 @@ export namespace AST {
       return 'Parens(' + this.expr.toString() + ')';
     }
 
-    toFormula(r1c1: boolean = false): string {
-      return '(' + this.expr.toFormula(r1c1) + ')';
+    toFormula(): string {
+      return '(' + this.expr.toFormula() + ')';
     }
   }
 
-  export class BinOpExpr implements IExpr {
+  export class BinOpExpr implements BaseExpression {
     static readonly type: 'BinOpExpr' = 'BinOpExpr';
     readonly type = BinOpExpr.type;
     readonly op: string;
@@ -426,18 +424,16 @@ export namespace AST {
       this.exprL = exprL;
     }
 
-    toFormula(r1c1: boolean = false): string {
-      return this.exprL.toFormula(r1c1) + ' ' + this.op + ' ' + this.exprR.toFormula(r1c1);
+    toFormula(): string {
+      return this.exprL.toFormula() + ' ' + this.op + ' ' + this.exprR.toFormula();
     }
 
     toString(): string {
-      return (
-        'BinOpExpr(' + this.op.toString() + ',' + this.exprL.toFormula(false) + ',' + this.exprR.toFormula(false) + ')'
-      );
+      return 'BinOpExpr(' + this.op.toString() + ',' + this.exprL.toFormula() + ',' + this.exprR.toFormula() + ')';
     }
   }
 
-  export class UnaryOpExpr implements IExpr {
+  export class UnaryOpExpr implements BaseExpression {
     static readonly type: 'UnaryOpExpr' = 'UnaryOpExpr';
     readonly type = UnaryOpExpr.type;
     readonly op: string;
@@ -448,12 +444,12 @@ export namespace AST {
       this.expr = expr;
     }
 
-    toFormula(r1c1: boolean = false): string {
-      return this.op + this.expr.toFormula(r1c1);
+    toFormula(): string {
+      return this.op + this.expr.toFormula();
     }
 
     toString(): string {
-      return 'UnaryOpExpr(' + this.op.toString() + ',' + this.expr.toFormula(false) + ')';
+      return 'UnaryOpExpr(' + this.op.toString() + ',' + this.expr.toFormula() + ')';
     }
   }
 
