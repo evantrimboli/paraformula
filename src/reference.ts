@@ -57,8 +57,8 @@ export namespace Reference {
    * Parses a quoted path-wb-ws prefix to a range.
    */
   export const quotedPrefix = P.between<CU.CharStream, CU.CharStream, [[CU.CharStream, CU.CharStream], CU.CharStream]>(
-    P.str("'")
-  )(P.str("'"))(
+    P.char("'")
+  )(P.char("'"))(
     P.pipe2<[CU.CharStream, CU.CharStream], CU.CharStream, [[CU.CharStream, CU.CharStream], CU.CharStream]>(workbook)(
       worksheetNameUnquoted
     )((w, ws) => [w, ws])
