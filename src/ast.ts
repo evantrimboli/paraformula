@@ -52,7 +52,7 @@ export namespace AST {
     let s = char;
     const relative = mode === 'relative';
 
-    if (value > 0) {
+    if (value !== 0) {
       if (relative) {
         s += '[';
       }
@@ -61,6 +61,7 @@ export namespace AST {
         s += ']';
       }
     }
+
     return s;
   };
 

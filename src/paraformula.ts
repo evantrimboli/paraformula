@@ -11,6 +11,15 @@ export namespace Paraformula {
     PE.expr(PR.rangeAny)
   );
 
+  const processOutput = (output: P.Outcome<AST.Expression>): AST.Expression => {
+    switch (output.tag) {
+      case 'success':
+        return output.result;
+      case 'failure':
+        throw new Error('Unable to parse input: ' + output.error_msg);
+    }
+  };
+
   /**
    * Parses an Excel formula and returns an AST.  Throws an
    * exception if the input is invalid.
@@ -21,16 +30,9 @@ export namespace Paraformula {
     const it = grammar(cs);
     const elem = it.next();
     if (elem.done) {
-      const output = elem.value;
-      switch (output.tag) {
-        case 'success':
-          return output.result;
-        case 'failure':
-          throw new Error('Unable to parse input: ' + output.error_msg);
-      }
-    } else {
-      throw new Error('This should never happen.');
+      return processOutput(elem.value);
     }
+    throw new Error('This should never happen.');
   }
 
   /**
@@ -41,11 +43,6 @@ export namespace Paraformula {
   export function* yieldableParse(input: string): Generator<undefined, AST.Expression, undefined> {
     const cs = new CU.CharStream(input);
     const output = yield* grammar(cs);
-    switch (output.tag) {
-      case 'success':
-        return output.result;
-      case 'failure':
-        throw new Error('Unable to parse input: ' + output.error_msg);
-    }
+    return processOutput(output);
   }
 }

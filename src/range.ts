@@ -8,12 +8,12 @@ export namespace Range {
   /**
    * Parses an A1 range suffix.
    */
-  export const rangeA1Suffix = P.right<CU.CharStream, AST.Address>(P.str(':'))(PA.a1Address);
+  export const rangeA1Suffix = P.right<CU.CharStream, AST.Address>(P.char(':'))(PA.a1Address);
 
   /**
    * Parses an R1C1 range suffix.
    */
-  export const rangeR1C1Suffix = P.right<CU.CharStream, AST.Address>(P.str(':'))(PA.r1c1Address);
+  export const rangeR1C1Suffix = P.right<CU.CharStream, AST.Address>(P.char(':'))(PA.r1c1Address);
 
   /**
    * Parses an A1-style contiguous range.
