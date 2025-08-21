@@ -136,6 +136,14 @@ export namespace AST {
       this.#type = type;
     }
 
+    get worksheetName() {
+      return this.env.worksheetName;
+    }
+
+    get workbookName() {
+      return this.env.workbookName;
+    }
+
     toString(): string {
       return '(' + this.column.toString() + ',' + this.row.toString() + ')';
     }

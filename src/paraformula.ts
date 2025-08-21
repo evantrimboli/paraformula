@@ -16,7 +16,15 @@ export namespace Paraformula {
       case 'success':
         return output.result;
       case 'failure':
-        throw new Error('Unable to parse input: ' + output.error_msg);
+        throw throwFailure(output.error_msg);
+    }
+  };
+
+  const throwFailure = (message: string): Error => new Error('Unable to parse input: ' + message);
+
+  const throwIfNotEof = (cs: CU.CharStream): void => {
+    if (!cs.isEOF()) {
+      throw throwFailure('Did not reach EOF');
     }
   };
 
@@ -30,9 +38,21 @@ export namespace Paraformula {
     const it = grammar(cs);
     const elem = it.next();
     if (elem.done) {
+      throwIfNotEof(cs);
       return processOutput(elem.value);
     }
     throw new Error('This should never happen.');
+  }
+
+  export function safeParse(input: string): AST.Expression | null {
+    const cs = new CU.CharStream(input);
+    const it = grammar(cs);
+    const elem = it.next();
+    if (elem.done) {
+      throwIfNotEof(cs);
+      return elem.value.tag === 'success' ? elem.value.result : null;
+    }
+    return null;
   }
 
   /**
